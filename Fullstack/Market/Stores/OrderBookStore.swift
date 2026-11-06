@@ -7,7 +7,7 @@ final class OrderBookStore {
     var precision: Precision?
     private(set) var book: BookSnapshot?
 
-    var subscription: Subscription { Subscription(coin: coin, nSigFigs: precision) }
+    var subscription: Subscription { Subscription(coin: coin, precision: precision) }
 
     func streamBook() async {
         await FeedClient().stream(subscription) { self.book = $0 }

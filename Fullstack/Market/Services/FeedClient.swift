@@ -32,12 +32,20 @@ struct FeedClient: Sendable {
             }
             defer { group.cancelAll() }
             let decoder = JSONDecoder()
+            var book: Book?
             while !Task.isCancelled {
                 let data = try await connection.receive().content
-                guard try decoder.decode(Channel.self, from: data).channel == subscription.type.rawValue else { continue }
-                let book = try decoder.decode(Message.self, from: data).data
+                guard let payload = try decoder.decode(Message.self, from: data).data else { continue }
+                if let full = payload.s {
+                    book = full
+                } else if let compressed = payload.c {
+                    book?.apply(try BookUpdate(compressed: compressed))
+                } else {
+                    continue
+                }
+                guard let book else { continue }
                 delay = .seconds(2)
-                await receive(book)
+                await receive(BookSnapshot(book))
             }
         }
     }
@@ -47,11 +55,15 @@ struct FeedClient: Sendable {
         let subscription: Subscription
     }
 
-    private struct Channel: Decodable {
-        let channel: String
-    }
-
+    /// A message from the server. Only book messages have a snapshot or an update.
     private struct Message: Decodable {
-        let data: BookSnapshot
+        struct Payload: Decodable {
+            /// A full book, sent once when the subscription starts.
+            let s: Book?
+            /// A compressed ``BookUpdate``.
+            let c: String?
+        }
+
+        let data: Payload?
     }
 }
