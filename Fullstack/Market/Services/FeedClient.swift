@@ -2,11 +2,11 @@ import Foundation
 import Network
 
 struct FeedClient: Sendable {
-    /// Delivers a subscription's payloads until the task is cancelled, reconnecting after each drop.
+    /// Delivers a subscription's books until the task is cancelled, reconnecting after each drop.
     ///
     /// Only `receive` runs on the main actor. Connecting, decoding, and waiting all run off it.
     @concurrent
-    func stream<Payload: Decodable & Sendable>(_ subscription: Subscription, receive: @MainActor (Payload) -> Void) async {
+    func stream(_ subscription: Subscription, receive: @MainActor (BookSnapshot) -> Void) async {
         var delay = Duration.seconds(2)
         while !Task.isCancelled {
             try? await connect(subscription, delay: &delay, receive: receive)
@@ -15,9 +15,9 @@ struct FeedClient: Sendable {
         }
     }
 
-    /// Opens one socket and delivers its payloads until it fails. The first payload resets `delay`.
-    private func connect<Payload: Decodable & Sendable>(
-        _ subscription: Subscription, delay: inout Duration, receive: @MainActor (Payload) -> Void
+    /// Opens one socket and delivers its books until it fails. The first book resets `delay`.
+    private func connect(
+        _ subscription: Subscription, delay: inout Duration, receive: @MainActor (BookSnapshot) -> Void
     ) async throws {
         let endpoint = URL(string: "wss://api.hyperliquid.xyz/ws")!
         let connection = NetworkConnection(to: .url(endpoint), using: { WebSocket { TLS() } })
@@ -34,10 +34,10 @@ struct FeedClient: Sendable {
             let decoder = JSONDecoder()
             while !Task.isCancelled {
                 let data = try await connection.receive().content
-                guard try decoder.decode(Channel.self, from: data).channel == subscription.type else { continue }
-                let payload = try decoder.decode(Message<Payload>.self, from: data).data
+                guard try decoder.decode(Channel.self, from: data).channel == subscription.type.rawValue else { continue }
+                let book = try decoder.decode(Message.self, from: data).data
                 delay = .seconds(2)
-                await receive(payload)
+                await receive(book)
             }
         }
     }
@@ -51,7 +51,7 @@ struct FeedClient: Sendable {
         let channel: String
     }
 
-    private struct Message<Payload: Decodable>: Decodable {
-        let data: Payload
+    private struct Message: Decodable {
+        let data: BookSnapshot
     }
 }

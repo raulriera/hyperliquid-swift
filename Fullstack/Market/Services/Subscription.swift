@@ -1,14 +1,11 @@
-struct Subscription: Encodable, Sendable {
-    let type: String
+/// The body of a subscribe request for the fast book feed.
+struct Subscription: Encodable, Hashable, Sendable {
+    enum Channel: String, Encodable, Sendable {
+        case book = "l2Book"
+    }
+
+    var type = Channel.book
     let coin: Coin
-    var nSigFigs: Precision?
-    var fast: Bool?
-
-    static func book(_ coin: Coin, precision: Precision?) -> Subscription {
-        Subscription(type: "l2Book", coin: coin, nSigFigs: precision, fast: true)
-    }
-
-    static func trades(_ coin: Coin) -> Subscription {
-        Subscription(type: "trades", coin: coin)
-    }
+    let nSigFigs: Precision?
+    var fast = true
 }
