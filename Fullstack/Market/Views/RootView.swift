@@ -7,5 +7,6 @@ struct RootView: View {
         NavigationStack {
             OrderBookScreen(store: store)
         }
+        .preferredColorScheme(.dark)
     }
 }

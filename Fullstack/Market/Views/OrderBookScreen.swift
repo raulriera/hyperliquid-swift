@@ -10,9 +10,9 @@ struct OrderBookScreen: View {
                 SpreadRow(amount: amount, fraction: fraction)
             }
             ArrangementView {
-                BookRegion(isPrimary: true, book: store.book, coin: store.book?.coin ?? store.coin, arrangedAxis: $axis)
+                BookRegion(isPrimary: true, book: store.book, arrangedAxis: $axis)
             } secondary: {
-                BookRegion(isPrimary: false, book: store.book, coin: store.book?.coin ?? store.coin, arrangedAxis: $axis)
+                BookRegion(isPrimary: false, book: store.book, arrangedAxis: $axis)
                     .layoutPriority(1)
             }
             .arrangementViewStyle(.split)
@@ -22,24 +22,25 @@ struct OrderBookScreen: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Picker("Precision", selection: $store.precision) {
-                    Label("Full", systemImage: "number").tag(Precision?.none)
+                    Label("Full", systemImage: "number.circle.fill").tag(Precision?.none)
                     ForEach(Precision.allCases, id: \.self) { precision in
-                        Label("\(precision.rawValue)", systemImage: "number").tag(Precision?.some(precision))
+                        Label("\(precision.rawValue)", systemImage: "\(precision.rawValue).circle.fill").tag(Precision?.some(precision))
                     }
                 }
                 .pickerStyle(.menu)
-                .labelStyle(.titleAndIcon)
+                .labelStyle(.iconOnly)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Picker("Coin", selection: $store.coin) {
                     ForEach(Coin.allCases, id: \.self) { coin in
-                        Label(coin.rawValue, systemImage: coin == .btc ? "bitcoinsign" : "diamond").tag(coin)
+                        Label(coin.rawValue, systemImage: coin == .btc ? "bitcoinsign.circle.fill" : "diamond.circle.fill").tag(coin)
                     }
                 }
                 .pickerStyle(.menu)
-                .labelStyle(.titleAndIcon)
+                .labelStyle(.iconOnly)
             }
         }
+        .background(.bookBackground)
         .task(id: store.subscription) {
             await store.streamBook()
         }

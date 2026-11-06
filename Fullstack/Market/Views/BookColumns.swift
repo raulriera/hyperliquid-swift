@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// The three aligned columns that the book's header and rows share.
-struct BookColumns: View {
-    let price: Text
+struct BookColumns<Price: View>: View {
+    let price: Price
     let size: Text
     let total: Text
 
@@ -12,7 +12,6 @@ struct BookColumns: View {
             size.frame(maxWidth: .infinity, alignment: .trailing)
             total.frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .font(.callout)
         .monospacedDigit()
         .lineLimit(1)
         .minimumScaleFactor(0.7)

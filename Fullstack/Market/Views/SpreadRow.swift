@@ -7,15 +7,15 @@ struct SpreadRow: View {
 
     var body: some View {
         HStack(spacing: 24) {
-            Text("Spread")
+            Text("Spread").foregroundStyle(.secondary)
             Text(amount, format: .number)
             Text(fraction, format: .percent.precision(.fractionLength(3)))
         }
-        .font(.callout)
+        .font(.footnote.weight(.medium))
         .monospacedDigit()
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 6)
-        .background(.quaternary, ignoresSafeAreaEdges: [])
+        .padding(.vertical, 8)
+        .background(.bookSurface, ignoresSafeAreaEdges: [])
         .accessibilityElement(children: .combine)
     }
 }
