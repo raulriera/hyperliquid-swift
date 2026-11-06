@@ -1,5 +1,5 @@
-struct Book: Decodable, Sendable {
-    struct Level: Decodable, Sendable {
+struct Book: Decodable, Equatable, Sendable {
+    struct Level: Decodable, Equatable, Sendable {
         let px: String
         let sz: String
         let n: Int
