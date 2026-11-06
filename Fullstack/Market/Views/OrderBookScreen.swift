@@ -1,0 +1,47 @@
+import SwiftUI
+
+struct OrderBookScreen: View {
+    @Bindable var store: OrderBookStore
+    @State private var axis: Axis?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if axis == .horizontal, let amount = store.book?.spread, let fraction = store.book?.spreadFraction {
+                SpreadRow(amount: amount, fraction: fraction)
+            }
+            ArrangementView {
+                BookRegion(isPrimary: true, book: store.book, coin: store.book?.coin ?? store.coin, arrangedAxis: $axis)
+            } secondary: {
+                BookRegion(isPrimary: false, book: store.book, coin: store.book?.coin ?? store.coin, arrangedAxis: $axis)
+                    .layoutPriority(1)
+            }
+            .arrangementViewStyle(.split)
+        }
+        .navigationTitle("Order Book")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Picker("Precision", selection: $store.precision) {
+                    Label("Full", systemImage: "number").tag(Precision?.none)
+                    ForEach(Precision.allCases, id: \.self) { precision in
+                        Label("\(precision.rawValue)", systemImage: "number").tag(Precision?.some(precision))
+                    }
+                }
+                .pickerStyle(.menu)
+                .labelStyle(.titleAndIcon)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Picker("Coin", selection: $store.coin) {
+                    ForEach(Coin.allCases, id: \.self) { coin in
+                        Label(coin.rawValue, systemImage: coin == .btc ? "bitcoinsign" : "diamond").tag(coin)
+                    }
+                }
+                .pickerStyle(.menu)
+                .labelStyle(.titleAndIcon)
+            }
+        }
+        .task(id: store.subscription) {
+            await store.streamBook()
+        }
+    }
+}
